@@ -16,5 +16,24 @@ namespace ProjetBDD_Restaurant
         {
             InitializeComponent();
         }
+
+        private void RafraichirGrilleTables()
+        {
+            try
+            {
+                AccesDonnees dal = new AccesDonnees();
+                // On lie la grille au résultat de notre requête de jointure
+                dgvTables.DataSource = dal.ObtenirEtatDesTables();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Erreur lors du chargement de l'état des tables : " + ex.Message);
+            }
+        }
+
+        private void Tables_Load(object sender, EventArgs e)
+        {
+            RafraichirGrilleTables();
+        }
     }
 }

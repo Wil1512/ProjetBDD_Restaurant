@@ -27,21 +27,33 @@ namespace ProjetBDD_Restaurant
 
         private void btnAfficherStats_Click(object sender, EventArgs e)
         {
-            AccesDonnees dal = new AccesDonnees();
+            try
+            {
+                AccesDonnees dal = new AccesDonnees();
 
-            // 1. Récupérer la date de début de semaine sélectionnée
-            DateTime dateDebutSemaine = dateTimePicker1.Value;
+                // On récupère la date du calendrier
+                DateTime dateSelectionnee = dateTimePicker1.Value;
 
-            // 2. Charger le Hit-parade des plats dans ton DataGridView (le grand carré gris)
-            // dgvHitParade est le nom de ton tableau sur ton FormStats
-            dgvHitParade.DataSource = dal.ObtenirHitParade();
+                // On calcule le CA de la semaine en partant de cette date
+                decimal caHebdo = dal.ObtenirChiffreAffairesHebdo(dateSelectionnee);
 
-            // 3. Calculer et afficher le chiffre d'affaires dans ta zone de texte
-            decimal caTotal = dal.ObtenirChiffreAffairesHebdo(dateDebutSemaine);
+                // On l'affiche dans ta TextBox (remplace 'txtChiffreAffaires' par le nom exact de ton contrôle)
+                tbChiffre.Text = caHebdo.ToString("F2") + " €";
 
-            // txtChiffreAffaires correspond à ta TextBox de droite. 
-            // "C2" applique le symbole monétaire (€) automatiquement
-            tbChiffre.Text = caTotal.ToString("C2");
+                // On actualise la grille par la même occasion
+                dgvHitParade.DataSource = dal.ObtenirHitParade();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Erreur : " + ex.Message);
+            }
+        }
+
+
+
+        private void dateTimePicker1_ValueChanged(object sender, EventArgs e)
+        {
+            //ChargerStatistiques();
         }
     }
 }

@@ -19,7 +19,26 @@ namespace ProjetBDD_Restaurant
 
         private void dateTimePicker1_ValueChanged(object sender, EventArgs e)
         {
+            RafraichirGrilleReservations();
+        }
 
+        private void RafraichirGrilleReservations()
+        {
+            try
+            {
+                AccesDonnees dal = new AccesDonnees();
+
+                // On récupère la date sélectionnée dans le calendrier
+                DateTime dateSelectionnee = dateTimePicker1.Value;
+
+                // On appelle la méthode de la DAL (celle qui filtre sur 7 jours)
+                // Remplace 'dgvReservations' par le nom EXACT de ton DataGridView
+                dgvReservations.DataSource = dal.ObtenirReservationsSemaine(dateSelectionnee);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Erreur lors du rafraîchissement de la grille : " + ex.Message);
+            }
         }
 
         private void btnReserver_Click(object sender, EventArgs e)
@@ -42,8 +61,39 @@ namespace ProjetBDD_Restaurant
 
             MessageBox.Show("Réservation enregistrée avec succès !", "Confirmation", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
+            RafraichirGrilleReservations();
+
             // 4. Optionnel : Rafraîchir immédiatement ton DataGridView pour voir la réservation s'afficher
             // dgvReservations.DataSource = dal.ObtenirReservationsSemaine(dateTimePicker1.Value);
         }
+
+        private void FormReservation_Load(object sender, EventArgs e)
+        {
+            try
+            {
+                AccesDonnees dal = new AccesDonnees();
+
+                // 1. On récupère les clients (on combine Nom et Prénom pour l'affichage)
+                // Assure-toi que les noms de colonnes (ClientID, Nom, Prenom) correspondent EXACTEMENT à ta BD
+                string query = "SELECT ClientID, Nom + ' ' + Prenom AS NomComplet FROM Clients";
+                System.Data.DataTable dtClients = dal.GetDonnees(query);
+
+                // 2. On lie les données au ComboBox (cbClients)
+                cbClient.DataSource = dtClients;
+                cbClient.DisplayMember = "NomComplet"; // Ce qui est visible pour l'utilisateur
+                cbClient.ValueMember = "ClientID";     // L'ID caché qu'on utilisera pour insérer la réservation
+
+                // 3. Optionnel : Désélectionner par défaut pour forcer un choix
+                cbClient.SelectedIndex = -1;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Erreur lors du chargement des clients : " + ex.Message);
+            }
+
+            RafraichirGrilleReservations();
+        }
     }
+
+
 }

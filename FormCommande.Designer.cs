@@ -33,10 +33,12 @@
             this.numQuantite = new System.Windows.Forms.NumericUpDown();
             this.label1 = new System.Windows.Forms.Label();
             this.btnAddition = new System.Windows.Forms.Button();
-            this.dataGridView1 = new System.Windows.Forms.DataGridView();
+            this.dgvCommandes = new System.Windows.Forms.DataGridView();
             this.btnTicket = new System.Windows.Forms.Button();
+            this.label2 = new System.Windows.Forms.Label();
+            this.label3 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.numQuantite)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvCommandes)).BeginInit();
             this.SuspendLayout();
             // 
             // cbTable
@@ -46,7 +48,7 @@
             this.cbTable.Name = "cbTable";
             this.cbTable.Size = new System.Drawing.Size(141, 21);
             this.cbTable.TabIndex = 0;
-            this.cbTable.Text = "Choisir la table occupée";
+            this.cbTable.SelectedIndexChanged += new System.EventHandler(this.cbTable_SelectedIndexChanged);
             // 
             // cbPlats
             // 
@@ -55,7 +57,6 @@
             this.cbPlats.Name = "cbPlats";
             this.cbPlats.Size = new System.Drawing.Size(122, 21);
             this.cbPlats.TabIndex = 1;
-            this.cbPlats.Text = "Sélectionner un plat";
             // 
             // numQuantite
             // 
@@ -83,13 +84,13 @@
             this.btnAddition.UseVisualStyleBackColor = true;
             this.btnAddition.Click += new System.EventHandler(this.btnAddition_Click);
             // 
-            // dataGridView1
+            // dgvCommandes
             // 
-            this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGridView1.Location = new System.Drawing.Point(325, 12);
-            this.dataGridView1.Name = "dataGridView1";
-            this.dataGridView1.Size = new System.Drawing.Size(471, 429);
-            this.dataGridView1.TabIndex = 5;
+            this.dgvCommandes.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgvCommandes.Location = new System.Drawing.Point(325, 12);
+            this.dgvCommandes.Name = "dgvCommandes";
+            this.dgvCommandes.Size = new System.Drawing.Size(471, 429);
+            this.dgvCommandes.TabIndex = 5;
             // 
             // btnTicket
             // 
@@ -101,13 +102,33 @@
             this.btnTicket.UseVisualStyleBackColor = true;
             this.btnTicket.Click += new System.EventHandler(this.btnTicket_Click);
             // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(12, 9);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(126, 13);
+            this.label2.TabIndex = 7;
+            this.label2.Text = "Choisir la table occupée :";
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(172, 9);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(107, 13);
+            this.label3.TabIndex = 8;
+            this.label3.Text = "Sélectionner un plat :";
+            // 
             // FormCommande
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.label3);
+            this.Controls.Add(this.label2);
             this.Controls.Add(this.btnTicket);
-            this.Controls.Add(this.dataGridView1);
+            this.Controls.Add(this.dgvCommandes);
             this.Controls.Add(this.btnAddition);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.numQuantite);
@@ -115,8 +136,9 @@
             this.Controls.Add(this.cbTable);
             this.Name = "FormCommande";
             this.Text = "FormCommande";
+            this.Load += new System.EventHandler(this.FormCommande_Load);
             ((System.ComponentModel.ISupportInitialize)(this.numQuantite)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvCommandes)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -129,7 +151,9 @@
         private System.Windows.Forms.NumericUpDown numQuantite;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button btnAddition;
-        private System.Windows.Forms.DataGridView dataGridView1;
+        private System.Windows.Forms.DataGridView dgvCommandes;
         private System.Windows.Forms.Button btnTicket;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Label label3;
     }
 }

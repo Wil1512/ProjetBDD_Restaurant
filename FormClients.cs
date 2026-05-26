@@ -42,7 +42,27 @@ namespace ProjetBDD_Restaurant
             txtTelephone.Clear();
 
             // Si tu as une fonction pour rafraîchir ton DataGridView, appelle-la ici :
-            // RafraichirGrilleClients();
+             RafraichirGrilleClients();
+        }
+
+        // . Crée une fonction pour rafraîchir la grille
+        private void RafraichirGrilleClients()
+        {
+            try
+            {
+                AccesDonnees dal = new AccesDonnees();
+                // Remplace dgvClients par le nom exact de ton DataGridView sur le design
+                dgvClients.DataSource = dal.ObtenirTousLesClients();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Erreur lors du chargement de la grille : " + ex.Message);
+            }
+        }
+
+        private void FormClients_Load(object sender, EventArgs e)
+        {
+            RafraichirGrilleClients();
         }
     }
 }

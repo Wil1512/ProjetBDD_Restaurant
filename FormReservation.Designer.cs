@@ -123,6 +123,7 @@
             this.Controls.Add(this.dgvReservations);
             this.Name = "FormReservation";
             this.Text = "FormReservation";
+            this.Load += new System.EventHandler(this.FormReservation_Load);
             ((System.ComponentModel.ISupportInitialize)(this.dgvReservations)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numTables)).EndInit();
             this.ResumeLayout(false);

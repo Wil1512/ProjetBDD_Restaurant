@@ -52,16 +52,27 @@ namespace ProjetBDD_Restaurant
 
         public decimal ObtenirChiffreAffaires(DateTime debut, DateTime fin)
         {
-            // La requête pour le chiffre d'affaires hebdomadaire [cite: 13]
-            string query = @"SELECT SUM(p.Prix * c.Quantite) 
+            // Ta superbe requête SQL bien structurée
+            string query = @"SELECT ISNULL(SUM(p.Prix * c.Quantite), 0) 
                      FROM Commandes c 
                      JOIN Plats p ON c.PlatID = p.PlatID 
                      JOIN Reservations r ON c.ResID = r.ResID 
                      WHERE r.DateRes BETWEEN @debut AND @fin";
 
-            // Ici, il faudra utiliser des paramètres pour la sécurité
-            // Pour l'instant, retiens que la logique SQL reste dans cette classe.
-            return 0; // (Exemple simplifié)
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                {
+                    // Sécurisation de la requête avec les paramètres attendus par le WHERE
+                    cmd.Parameters.AddWithValue("@debut", debut);
+                    cmd.Parameters.AddWithValue("@fin", fin);
+
+                    conn.Open();
+
+                    // ExecuteScalar() récupère la valeur unique renvoyée par le SUM
+                    return Convert.ToDecimal(cmd.ExecuteScalar());
+                }
+            }
         }
 
         public void AjouterClient(string nom, string prenom, string telephone)
@@ -137,8 +148,13 @@ namespace ProjetBDD_Restaurant
 
         public decimal ObtenirChiffreAffairesHebdo(DateTime dateDebut)
         {
-            DateTime dateFin = dateDebut.AddDays(7);
-            string query = @"SELECT SUM(p.Prix * c.Quantite) 
+            // On force le début de la semaine à minuit pile (00:00:00)
+            DateTime debutReel = dateDebut.Date;
+
+            // On calcule la fin 7 jours plus tard, poussée jusqu'à la dernière seconde de la journée (23:59:59)
+            DateTime finReelle = debutReel.AddDays(7).Date.AddHours(23).AddMinutes(59).AddSeconds(59);
+
+            string query = @"SELECT ISNULL(SUM(p.Prix * c.Quantite), 0) 
                      FROM Commandes c 
                      JOIN Plats p ON c.PlatID = p.PlatID 
                      JOIN Reservations r ON c.ResID = r.ResID 
@@ -148,15 +164,202 @@ namespace ProjetBDD_Restaurant
             {
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
-                    cmd.Parameters.AddWithValue("@debut", dateDebut);
-                    cmd.Parameters.AddWithValue("@fin", dateFin);
+                    // On envoie les dates nettoyées
+                    cmd.Parameters.AddWithValue("@debut", debutReel);
+                    cmd.Parameters.AddWithValue("@fin", finReelle);
 
                     conn.Open();
                     object result = cmd.ExecuteScalar();
-                    return result != DBNull.Value ? Convert.ToDecimal(result) : 0;
+
+                    if (result != null && result != DBNull.Value)
+                    {
+                        return Convert.ToDecimal(result);
+                    }
+                    return 0;
                 }
             }
         }
 
+        public DataTable ObtenirReservationsSemaine(DateTime dateDebut)
+        {
+            // .Date force l'heure à minuit pile (00:00:00) pour le début de la semaine
+            DateTime debutSemaine = dateDebut.Date;
+
+            // La fin de la semaine s'arrête 7 jours plus tard à 23h59:59
+            DateTime finSemaine = debutSemaine.AddDays(7).AddHours(23).AddMinutes(59).AddSeconds(59);
+
+            string query = @"SELECT r.ResID AS [N°], 
+                            c.Nom + ' ' + c.Prenom AS [Client], 
+                            r.TableNum AS [Table], 
+                            r.DateRes AS [Date & Heure]
+                     FROM Reservations r 
+                     JOIN Clients c ON r.ClientID = c.ClientID 
+                     WHERE r.DateRes BETWEEN @debut AND @fin";
+
+            DataTable dt = new DataTable();
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                {
+                    // On passe les dates nettoyées de leurs heures parasites
+                    cmd.Parameters.AddWithValue("@debut", debutSemaine);
+                    cmd.Parameters.AddWithValue("@fin", finSemaine);
+
+                    using (SqlDataAdapter adapter = new SqlDataAdapter(cmd))
+                    {
+                        conn.Open();
+                        adapter.Fill(dt);
+                    }
+                }
+            }
+            return dt;
+        }
+
+        public DataTable ObtenirTousLesClients()
+        {
+            string query = "SELECT ClientID AS [ID], Nom, Prenom, Telephone AS [Téléphone] FROM Clients ORDER BY Nom, Prenom";
+            DataTable dt = new DataTable();
+
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                {
+                    using (SqlDataAdapter adapter = new SqlDataAdapter(cmd))
+                    {
+                        conn.Open();
+                        adapter.Fill(dt);
+                    }
+                }
+            }
+            return dt;
+        }
+
+        public DataTable ObtenirEtatDesTables()
+        {
+            // Cette requête récupère la liste des tables actuellement associées à une réservation
+            string query = @"SELECT r.TableNum AS [N° Table], 
+                            c.Nom + ' ' + c.Prenom AS [Occupée par], 
+                            r.DateRes AS [Date de Réservation]
+                     FROM Reservations r
+                     JOIN Clients c ON r.ClientID = c.ClientID
+                     ORDER BY r.TableNum";
+
+            DataTable dt = new DataTable();
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                {
+                    using (SqlDataAdapter adapter = new SqlDataAdapter(cmd))
+                    {
+                        conn.Open();
+                        adapter.Fill(dt);
+                    }
+                }
+            }
+            return dt;
+        }
+
+        // 1. Récupérer la liste des numéros de tables uniques qui ont une réservation
+        public DataTable ObtenirTablesReservees()
+        {
+            string query = "SELECT DISTINCT TableNum FROM Reservations ORDER BY TableNum";
+            DataTable dt = new DataTable();
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                {
+                    using (SqlDataAdapter adapter = new SqlDataAdapter(cmd))
+                    {
+                        conn.Open();
+                        adapter.Fill(dt);
+                    }
+                }
+            }
+            return dt;
+        }
+
+        // 2. Récupérer la liste de tous les plats pour le ComboBox
+        public DataTable ObtenirTousLesPlats()
+        {
+            string query = "SELECT PlatID, Nom, Prix FROM Plats ORDER BY Categorie, Nom";
+            DataTable dt = new DataTable();
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                {
+                    using (SqlDataAdapter adapter = new SqlDataAdapter(cmd))
+                    {
+                        conn.Open();
+                        adapter.Fill(dt);
+                    }
+                }
+            }
+            return dt;
+        }
+
+        // 3. Récupérer les plats déjà commandés par une table pour la grille
+        public DataTable ObtenirCommandesParTable(int numTable)
+        {
+            // Correction de la requête avec tes vrais noms de colonnes :
+            // CommandeID à la place de ComID, et liaison via r.TableNum et c.ResID
+            string query = @"SELECT c.CommandeID AS [N° Ligne], 
+                            p.Nom AS [Plat Commandé], 
+                            p.Prix AS [Prix Unitaire (€)],
+                            c.Quantite AS [Quantité]
+                     FROM Commandes c
+                     JOIN Plats p ON c.PlatID = p.PlatID
+                     JOIN Reservations r ON c.ResID = r.ResID
+                     WHERE r.TableNum = @tableNum";
+
+            DataTable dt = new DataTable();
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                {
+                    cmd.Parameters.AddWithValue("@tableNum", numTable);
+                    using (SqlDataAdapter adapter = new SqlDataAdapter(cmd))
+                    {
+                        conn.Open();
+                        adapter.Fill(dt);
+                    }
+                }
+            }
+            return dt;
+        }
+
+        public int ObtenirResIDParTable(int numTable)
+        {
+            string query = "SELECT TOP 1 ResID FROM Reservations WHERE TableNum = @tableNum ORDER BY DateRes DESC";
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                {
+                    cmd.Parameters.AddWithValue("@tableNum", numTable);
+                    conn.Open();
+                    object result = cmd.ExecuteScalar();
+                    return result != null ? Convert.ToInt32(result) : 0;
+                }
+            }
+        }
+
+        public decimal CalculerTotalTable(int numTable)
+        {
+            // On fait la somme des prix multipliés par leur quantité pour une table donnée
+            string query = @"SELECT ISNULL(SUM(p.Prix * c.Quantite), 0)
+                     FROM Commandes c
+                     JOIN Plats p ON c.PlatID = p.PlatID
+                     JOIN Reservations r ON c.ResID = r.ResID
+                     WHERE r.TableNum = @tableNum";
+
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                {
+                    cmd.Parameters.AddWithValue("@tableNum", numTable);
+                    conn.Open();
+                    return Convert.ToDecimal(cmd.ExecuteScalar());
+                }
+            }
+        }
     }
 }
